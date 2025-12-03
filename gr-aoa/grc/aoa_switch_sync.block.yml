@@ -1,0 +1,70 @@
+id: aoa_switch_sync
+label: AOA Switch Sync Minimal
+category: '[AOA]'
+
+templates:
+  imports: from gnuradio import aoa
+  make: >
+    aoa.switch_sync(
+        sample_rate=${sample_rate},
+        dwell_time=${dwell_time},
+        threshold=${threshold},
+        serial_port=${serial_port},
+        baud_rate=${baud_rate},
+        max_antennas=${max_antennas},
+        antenna_offset_deg=${antenna_offset_deg},
+        settling_time=${settling_time}
+    )
+
+parameters:
+- id: sample_rate
+  label: Sample Rate
+  dtype: float
+  default: 10000000
+
+- id: dwell_time
+  label: Dwell Time (s)
+  dtype: float
+  default: 45e-6
+
+- id: threshold
+  label: Sync Threshold (Linear)
+  dtype: float
+  default: 0.05
+
+- id: serial_port
+  label: Serial Port
+  dtype: string
+  default: '/dev/ttyUSB0'
+
+- id: baud_rate
+  label: Baud Rate
+  dtype: int
+  default: 115200
+
+- id: max_antennas
+  label: Max Antennas
+  dtype: int
+  default: 6
+
+- id: antenna_offset_deg
+  label: Antenna Offset (Deg)
+  dtype: float
+  default: 0.0
+
+- id: settling_time
+  label: Settling Time (s)
+  dtype: float
+  default: 5e-6
+
+inputs:
+- label: in
+  domain: stream
+  dtype: complex
+
+outputs:
+- label: out
+  domain: stream
+  dtype: complex
+
+file_format: 1
