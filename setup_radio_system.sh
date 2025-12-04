@@ -12,7 +12,6 @@
 # =================================================================
 
 # --- CONFIGURATION ---
-AOA_REPO_URL="https://github.com/YOUR_USERNAME/gr-aoa.git"
 FIRMWARE_URL="https://www.nuand.com/fpga/v0.15.3/hostedxA4.rbf"
 
 # Exit on error
@@ -120,18 +119,16 @@ chown -R "$ORIGINAL_USER:$ORIGINAL_USER" "$BLADERF_SRC_DIR"
 # --- 5. INSTALL GR-AOA (YOUR CUSTOM MODULE) ---
 echo "🎯 [5/7] Installing gr-aoa (Your Module)..."
 
-# Install alongside the script
-cd "$SCRIPT_DIR"
-REPO_NAME=$(basename "$AOA_REPO_URL" .git)
+# The gr-aoa repository is expected to be co-located with this script
+# Navigate into the gr-aoa directory to build it.
+AOA_SRC_DIR="$SCRIPT_DIR/gr-aoa"
 
-if [ -d "$REPO_NAME" ]; then
-    echo "   Removing existing directory to ensure clean build..."
-    rm -rf "$REPO_NAME"
+if [ ! -d "$AOA_SRC_DIR" ]; then
+    echo "❌ Error: gr-aoa directory not found at $AOA_SRC_DIR. Please ensure it's present."
+    exit 1
 fi
 
-echo "   Cloning into $SCRIPT_DIR/$REPO_NAME..."
-git clone "$AOA_REPO_URL"
-cd "$REPO_NAME"
+cd "$AOA_SRC_DIR"
 
 # Build with Python Path Fixes (using in-source build as a workaround for path issues)
 echo "   Configuring CMake with dynamic Python Path..."
@@ -145,7 +142,7 @@ make install
 ldconfig
 
 # Fix ownership
-chown -R "$ORIGINAL_USER:$ORIGINAL_USER" "$SCRIPT_DIR/$REPO_NAME"
+chown -R "$ORIGINAL_USER:$ORIGINAL_USER" "$AOA_SRC_DIR"
 
 # --- 6. USER PERMISSIONS ---
 echo "👤 [6/7] Finalizing Permissions..."
