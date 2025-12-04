@@ -133,14 +133,12 @@ echo "   Cloning into $SCRIPT_DIR/$REPO_NAME..."
 git clone "$AOA_REPO_URL"
 cd "$REPO_NAME"
 
-# Build with Python Path Fixes
-mkdir build
-cd build
-
-echo "   Configuring CMake with Python Path Fix..."
+# Build with Python Path Fixes (using in-source build as a workaround for path issues)
+echo "   Configuring CMake with dynamic Python Path..."
+PYTHON_SITEDIR=$(python3 -c "import site; print(site.getsitepackages()[0])")
 cmake -DCMAKE_INSTALL_PREFIX=/usr \
-      -DGR_PYTHON_DIR=/usr/lib/python3/dist-packages \
-      ..
+      -DGR_PYTHON_DIR="$PYTHON_SITEDIR" \
+      .
 
 make -j$(nproc)
 make install
