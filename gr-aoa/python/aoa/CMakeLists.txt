@@ -25,6 +25,7 @@ gr_python_install(FILES
     switch_sync.py
     rf_switch_sync.py
     arduino_switch_control.py
+    calc.py
     DESTINATION ${GR_PYTHON_DIR}/gnuradio/aoa
 )
 
@@ -41,3 +42,4 @@ add_custom_target(
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}
             ${PROJECT_BINARY_DIR}/test_modules/gnuradio/aoa/)
 GR_ADD_TEST(qa_switch_sync ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_switch_sync.py)
+GR_ADD_TEST(qa_calc ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_calc.py)

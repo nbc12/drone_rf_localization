@@ -1,0 +1,61 @@
+id: aoa_calc
+label: AOA Vector Calc
+category: '[AOA]'
+
+templates:
+  imports: from gnuradio import aoa
+  make: >
+    aoa.calc(
+        sample_rate=${sample_rate},
+        dwell_time=${dwell_time},
+        num_antennas=${num_antennas},
+        antenna_offset_deg=${antenna_offset_deg}
+    )
+
+parameters:
+- id: sample_rate
+  label: Sample Rate
+  dtype: float
+  default: 10000000
+
+- id: dwell_time
+  label: Dwell Time (s)
+  dtype: float
+  default: 45e-6
+
+- id: num_antennas
+  label: Number of Antennas
+  dtype: int
+  default: 6
+
+- id: antenna_offset_deg
+  label: Antenna Offset (Deg)
+  dtype: float
+  default: 0.0
+
+inputs:
+- label: ant1
+  domain: stream
+  dtype: complex
+- label: ant2
+  domain: stream
+  dtype: complex
+- label: ant3
+  domain: stream
+  dtype: complex
+- label: ant4
+  domain: stream
+  dtype: complex
+- label: ant5
+  domain: stream
+  dtype: complex
+- label: ant6
+  domain: stream
+  dtype: complex
+
+outputs:
+- label: vec
+  domain: stream
+  dtype: complex
+
+file_format: 1
