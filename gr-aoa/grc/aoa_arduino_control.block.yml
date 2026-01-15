@@ -1,0 +1,33 @@
+id: aoa_arduino_control
+label: Arduino Switch Control
+category: '[AOA]'
+
+templates:
+  imports: from gnuradio import aoa
+  make: >
+    aoa.arduino_switch_control(
+        serial_port=${serial_port},
+        baud_rate=${baud_rate},
+        dwell_time=${dwell_time}
+    )
+
+parameters:
+- id: serial_port
+  label: Serial Port
+  dtype: string
+  default: '/dev/ttyUSB0'
+
+- id: baud_rate
+  label: Baud Rate
+  dtype: int
+  default: 115200
+
+- id: dwell_time
+  label: Dwell Time (s)
+  dtype: float
+  default: 45e-6
+
+# No Inputs or Outputs for control block
+# Maybe message ports in future?
+
+file_format: 1

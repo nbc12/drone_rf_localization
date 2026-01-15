@@ -23,6 +23,8 @@ add_subdirectory(bindings)
 gr_python_install(FILES
     __init__.py
     switch_sync.py
+    rf_switch_sync.py
+    arduino_switch_control.py
     DESTINATION ${GR_PYTHON_DIR}/gnuradio/aoa
 )
 
