@@ -1,0 +1,33 @@
+id: aoa_sync_pll
+label: AOA Sync PLL
+category: '[AOA]'
+
+templates:
+  imports: from gnuradio import aoa
+  make: aoa.sync_pll(sample_rate=${sample_rate}, dwell_time=${dwell_time}, num_antennas=${num_antennas})
+
+parameters:
+- id: sample_rate
+  label: Sample Rate
+  dtype: int
+  default: 1000000
+- id: dwell_time
+  label: Dwell Time (s)
+  dtype: float
+  default: 0.5
+- id: num_antennas
+  label: Num Antennas
+  dtype: int
+  default: 6
+
+inputs:
+- label: in
+  domain: stream
+  dtype: float
+
+outputs:
+- label: out
+  domain: stream
+  dtype: float
+
+file_format: 1

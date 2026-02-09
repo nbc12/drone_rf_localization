@@ -89,8 +89,20 @@ class RFSwitchSync:
                     self.next_edge_predict = float(start_search_idx + rel_edge)
                     self.locked = True
                     
-                except RuntimeError:
+                except RuntimeError as e:
                     # Failed to find lock in remaining data
+                    # DEBUG: Print the reason!
+                    print(f"[DEBUG RFSync] Lock failed: {e}")
+                    
+                    # OPTIMIZATION: Advance next_edge_predict so we don't re-scan the same failing data next time.
+                    # We need to leave enough overlap (e.g. 2 cycles) to detect the pattern if it starts late.
+                    overlap_safety = self.samples_per_cycle * 2.0
+                    if len(power) > overlap_safety:
+                        # Advance pointer to (End - Safety)
+                        new_predict = len(power) - overlap_safety
+                        if new_predict > self.next_edge_predict:
+                            self.next_edge_predict = float(new_predict)
+                    
                     break
 
             if self.locked:
@@ -139,15 +151,17 @@ class RFSwitchSync:
         """
         Scans buffer. Returns: (first_edge_index, measured_avg_period)
         """
-        # print(f"DEBUG: Acquiring lock on len={len(power)}...")
-
         # --- NEW: Buffer Length Safety Check ---
         min_required = int(self.samples_per_cycle * 2.5)
         if len(power) < min_required:
+            # DEBUG: Be explicit about waiting
+            # print(f"[DEBUG RFSync] Waiting for data... Have {len(power)}, Need {min_required}")
             raise RuntimeError(
                 f"SYNC ERROR: Buffer too short. Need >{min_required} samples, "
                 f"got {len(power)}. (Try increasing SDR read buffer size)"
             )
+
+        print(f"[DEBUG RFSync] Attempting lock on {len(power)} samples. Threshold: {threshold_value:.6f}")
 
         # 1. Thresholding
         is_low = power < threshold_value
@@ -158,6 +172,8 @@ class RFSwitchSync:
         starts = np.where(diffs == 1)[0]
         ends = np.where(diffs == -1)[0]
         
+        print(f"[DEBUG RFSync] Found {len(starts)} falling edges (starts of low).")
+
         # Handle empty cases
         if len(starts) == 0:
             raise RuntimeError("SYNC ERROR: No falling edges found (Signal too high?)")

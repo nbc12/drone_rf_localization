@@ -21,4 +21,11 @@ except ModuleNotFoundError:
 
 # import any pure python here
 from .switch_sync import switch_sync
-#
+from .sync_detector import sync_detector
+from .sync_pll import sync_pll
+from .demux import demux
+from .chunk_tagger import chunk_tagger
+
+
+AOA_MAGIC = 987654321
+

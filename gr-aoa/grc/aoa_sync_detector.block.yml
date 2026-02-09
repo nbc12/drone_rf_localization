@@ -1,0 +1,37 @@
+id: aoa_sync_detector
+label: AOA Sync Detector
+category: '[AOA]'
+
+templates:
+  imports: from gnuradio import aoa
+  make: aoa.sync_detector(sample_rate=${sample_rate}, dwell_time=${dwell_time}, window_size=${window_size}, threshold_percentile=${threshold_percentile})
+
+parameters:
+- id: sample_rate
+  label: Sample Rate
+  dtype: int
+  default: 1000000
+- id: dwell_time
+  label: Dwell Time (s)
+  dtype: float
+  default: 0.5
+- id: window_size
+  label: Window Size
+  dtype: int
+  default: 1024
+- id: threshold_percentile
+  label: Threshold (0-1)
+  dtype: float
+  default: 0.20
+
+inputs:
+- label: in
+  domain: stream
+  dtype: float
+
+outputs:
+- label: out
+  domain: stream
+  dtype: float
+
+file_format: 1

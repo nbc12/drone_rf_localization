@@ -1,25 +1,14 @@
 #!/bin/bash
 
 # =================================================================
-# AUTOMATED INSTALLER FOR GR-AOA (GNU Radio OOT Module)
+# BUILD SCRIPT FOR GR-AOA
 # =================================================================
-# Usage: sudo ./install_aoa.sh
+# Usage: sudo ./build.sh
 #
-# This script performs the following:
-# 1. Installs system dependencies (GNU Radio, CMake, Python libs).
-# 2. Configures USB/Serial permissions for the non-root user.
-# 3. Clones the repository INTO THE CURRENT DIRECTORY.
-# 4. Builds and Installs the module system-wide (fixing Python paths).
+# This script builds and installs the CURRENT directory.
+# It uses specific flags to ensure python modules are installed
+# to the correct system path (/usr/lib/python3/dist-packages).
 # =================================================================
-
-# --- CONFIGURATION ---
-# REPLACE THIS WITH YOUR GITHUB URL
-REPO_URL="https://github.com/YOUR_USERNAME/gr-aoa.git"
-
-# DETERMINE SCRIPT LOCATION
-# This ensures we install alongside the script, even if run from elsewhere
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-INSTALL_DIR="$SCRIPT_DIR"
 
 # --- SAFETY CHECKS ---
 if [ "$EUID" -ne 0 ]; then
@@ -27,92 +16,62 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-if [ -z "$SUDO_USER" ]; then
-  echo "❌ Error: Could not detect the actual user. Are you running in a root shell?"
-  exit 1
-fi
+# DETERMINE SCRIPT LOCATION
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+cd "$SCRIPT_DIR"
 
 echo "==================================================="
-echo "🚀 STARTING GR-AOA INSTALLATION"
-echo "   Target User: $SUDO_USER"
-echo "   Location:    $INSTALL_DIR"
-echo "   Repo:        $REPO_URL"
+echo "🚀 STARTING GR-AOA BUILD"
+echo "   Location: $SCRIPT_DIR"
 echo "==================================================="
 
-# 1. UPDATE AND INSTALL DEPENDENCIES
-echo "📦 [1/6] Installing System Dependencies..."
-apt-get update -qq
-apt-get install -y \
-    gnuradio-dev \
-    cmake \
-    build-essential \
-    git \
-    python3-serial \
-    python3-numpy \
-    python3-setuptools \
-    linux-tools-virtual \
-    hwdata
+# 0. SYNC TIME (CRITICAL FOR WSL2)
+echo "🕒 [0/5] Syncing clock with Windows host..."
+hwclock -s
 
-# 2. CONFIGURE PERMISSIONS (DIALOUT)
-echo "🔑 [2/6] Configuring User Permissions..."
-# Check if user is already in dialout
-if groups "$SUDO_USER" | grep &>/dev/null '\bdialout\b'; then
-    echo "   User $SUDO_USER is already in 'dialout'."
-else
-    echo "   Adding $SUDO_USER to 'dialout' group (Required for Arduino)..."
-    usermod -aG dialout "$SUDO_USER"
-    echo "   ⚠️  NOTE: You must LOG OUT and LOG IN for this to take effect!"
-fi
-
-# 3. CLONE REPOSITORY
-echo "⬇️  [3/6] Cloning Repository..."
-cd "$INSTALL_DIR"
-
-# Extract repo name from URL (e.g., gr-aoa.git -> gr-aoa)
-REPO_NAME=$(basename "$REPO_URL" .git)
-
-# Clean up previous install if it exists
-if [ -d "$REPO_NAME" ]; then
-    echo "   Removing existing directory '$REPO_NAME'..."
-    rm -rf "$REPO_NAME"
-fi
-
-git clone "$REPO_URL"
-cd "$REPO_NAME"
-
-# Fix ownership (since we are running as sudo, clone belongs to root by default)
-# We give it back to the user who ran sudo
-chown -R "$SUDO_USER":"$SUDO_USER" "$INSTALL_DIR/$REPO_NAME"
-
-# 4. PREPARE BUILD DIRECTORY
-echo "🔨 [4/6] Configuring Build..."
+# 1. PREPARE BUILD DIRECTORY
+echo "🔨 [1/4] Configuring Build Directory..."
 rm -rf build
 mkdir build
 cd build
 
-# 5. CMAKE & INSTALL (The Critical Fixes)
+# 2. CMAKE
 # We force CMAKE_INSTALL_PREFIX to /usr for system-wide access
 # We force GR_PYTHON_DIR to /usr/lib/python3/dist-packages to fix Import Errors
-echo "🔧 [5/6] Compiling and Installing..."
-
+echo "🔧 [2/4] Running CMake..."
 cmake -DCMAKE_INSTALL_PREFIX=/usr \
       -DGR_PYTHON_DIR=/usr/lib/python3/dist-packages \
       ..
 
+if [ $? -ne 0 ]; then
+    echo "❌ CMake failed."
+    exit 1
+fi
+
+# 3. COMPILE
+echo "🧱 [3/4] Compiling..."
 make -j$(nproc)
+
+if [ $? -ne 0 ]; then
+    echo "❌ Compilation failed."
+    exit 1
+fi
+
+# 4. INSTALL
+echo "💿 [4/4] Installing..."
 make install
 ldconfig
 
-# 6. VERIFICATION
-echo "✅ [6/6] Verifying Installation..."
-if python3 -c "from gnuradio import aoa; print('   Import Successful!')"; then
+# 5. VERIFICATION
+echo "🔍 [5/5] Verifying Installation..."
+if python3 -c "from gnuradio import aoa; assert aoa.AOA_MAGIC == 987654321, 'Magic number mismatch'; print('   Import Successful & Magic Number Verified!')" 2>/dev/null; then
     echo "==================================================="
-    echo "🎉 INSTALLATION COMPLETE SUCCESSFULY!"
-    echo "   Location: $INSTALL_DIR/$REPO_NAME"
-    echo "   You can now open GNU Radio Companion."
-    echo "   Note: If you just added permissions, please restart WSL."
+    echo "🎉 BUILD & INSTALL COMPLETE SUCCESSFULY!"
+    echo "   You can now use the 'aoa' module in GNU Radio."
     echo "==================================================="
 else
-    echo "❌ INSTALLATION FAILED: Python could not import 'aoa'."
+    echo "❌ ERROR: Installation finished, but verification failed."
+    echo "   Either Python cannot import 'aoa', or the Magic Number does not match."
+    echo "   Check your PYTHONPATH or ensure the new code was actually installed."
     exit 1
 fi

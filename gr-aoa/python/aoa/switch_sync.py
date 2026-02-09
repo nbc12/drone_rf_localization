@@ -64,9 +64,15 @@ class switch_sync(gr.basic_block):
             
         # 1. Prepend residue from previous call
         combined = numpy.concatenate((self.residue, in_stream))
-        
+
+        # DEBUG: Monitor buffer growth
+        if len(combined) % 10000 < len(in_stream): # Print occasionally
+            print(f"[DEBUG switch_sync] Buffer Size: {len(combined)} / Required approx: {int(self.rf_sync.samples_per_cycle * 2.5)}")
+
         # 2. Adjust RFSwitchSync prediction pointer
-        self.rf_sync.next_edge_predict += len(self.residue)
+        # REMOVED: self.rf_sync.next_edge_predict += len(self.residue)
+        # Reason: next_edge_predict is relative to the start of 'residue' (which is the start of 'combined').
+        # Adding len(residue) incorrectly shifts the pointer into the new data or beyond.
         
         # 3. Process
         # process_stream returns a LIST of dicts (one dict per cycle)
@@ -118,6 +124,20 @@ class switch_sync(gr.basic_block):
         # We need history going back `samples_per_cycle` from that edge.
         
         keep_start = int(self.rf_sync.next_edge_predict - self.rf_sync.samples_per_cycle - 200) # extra safety
+        
+        # SAFETY CAP: If we are not locked and buffer is getting huge, we must drop old data 
+        # to prevent O(N^2) copy performance death.
+        # We need at least ~2.5 cycles to lock. Let's cap at 3.0 cycles.
+        max_buffer_size = int(self.rf_sync.samples_per_cycle * 3.0)
+        
+        if not self.rf_sync.locked:
+            # If not locked, 'next_edge_predict' is just a search cursor. 
+            # If the buffer is too big, move the start pointer up.
+            current_buffer_len = len(combined)
+            if current_buffer_len > max_buffer_size:
+                # Drop the oldest data, keeping only the most recent 'max_buffer_size'
+                keep_start = max(keep_start, current_buffer_len - max_buffer_size)
+        
         if keep_start < 0:
             keep_start = 0
             
