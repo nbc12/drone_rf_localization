@@ -1,0 +1,46 @@
+id: aoa_chunk_tagger
+label: Chunk File Sink
+category: '[AOA]'
+
+templates:
+  imports: from gnuradio import aoa
+  make: >
+    aoa.chunk_tagger(
+        samp_rate=${samp_rate},
+        seconds_per_chunk=${seconds_per_chunk},
+        base_path=${base_path},
+        files_per_folder=${files_per_folder}
+    )
+
+parameters:
+- id: samp_rate
+  label: Sample Rate
+  dtype: float
+  default: 2000000
+
+- id: seconds_per_chunk
+  label: Seconds Per Chunk
+  dtype: float
+  default: 1.0
+
+- id: base_path
+  label: Base Directory
+  dtype: string
+  default: "."
+
+- id: files_per_folder
+  label: Files Per Folder
+  dtype: int
+  default: 1000
+
+inputs:
+- label: in
+  domain: stream
+  dtype: complex
+
+outputs:
+- label: out
+  domain: stream
+  dtype: complex
+
+file_format: 1

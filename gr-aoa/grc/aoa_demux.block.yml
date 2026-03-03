@@ -1,42 +1,32 @@
-id: aoa_switch_sync
-label: AOA Switch Sync Demux
+id: aoa_demux
+label: AOA Demux
 category: '[AOA]'
 
 templates:
   imports: from gnuradio import aoa
-  make: >
-    aoa.switch_sync(
-        sample_rate=${sample_rate},
-        dwell_time=${dwell_time},
-        num_antennas=${num_antennas},
-        threshold_percentile=${threshold_percentile}
-    )
+  make: aoa.demux(sample_rate=${sample_rate}, dwell_time=${dwell_time}, num_antennas=${num_antennas})
 
 parameters:
 - id: sample_rate
   label: Sample Rate
-  dtype: float
-  default: 10000000
-
+  dtype: int
+  default: 1000000
 - id: dwell_time
   label: Dwell Time (s)
   dtype: float
-  default: 45e-6
-
+  default: 0.5
 - id: num_antennas
-  label: Number of Antennas
+  label: Num Antennas
   dtype: int
   default: 6
 
-- id: threshold_percentile
-  label: Threshold Percentile (0-100)
-  dtype: float
-  default: 10.0
-
 inputs:
-- label: in
+- label: iq_in
   domain: stream
   dtype: complex
+- label: clk_in
+  domain: stream
+  dtype: float
 
 outputs:
 - label: ant1
@@ -57,7 +47,7 @@ outputs:
 - label: ant6
   domain: stream
   dtype: complex
-- label: dead
+- label: dead_time
   domain: stream
   dtype: complex
 

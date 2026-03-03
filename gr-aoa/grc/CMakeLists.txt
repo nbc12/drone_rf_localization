@@ -7,4 +7,9 @@
 #
 
 install(FILES
-    aoa_switch_sync.block.yml DESTINATION share/gnuradio/grc/blocks)
+    aoa_switch_sync.block.yml
+    aoa_sync_detector.block.yml
+    aoa_sync_pll.block.yml
+    aoa_demux.block.yml
+    aoa_chunk_tagger.block.yml
+    DESTINATION share/gnuradio/grc/blocks)
